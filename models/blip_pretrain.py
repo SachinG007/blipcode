@@ -101,9 +101,9 @@ class BLIP_Pretrain(nn.Module):
         image_embeds = self.visual_encoder(image) 
         image_atts = torch.ones(image_embeds.size()[:-1],dtype=torch.long).to(image.device)        
         image_feat = F.normalize(self.vision_proj(image_embeds[:,0,:]),dim=-1)          
-        
         text = self.tokenizer(caption, padding='max_length', truncation=True, max_length=30, 
                               return_tensors="pt").to(image.device)  
+        # text = caption
         text_output = self.text_encoder(text.input_ids, attention_mask = text.attention_mask,                      
                                         return_dict = True, mode = 'text')            
         text_feat = F.normalize(self.text_proj(text_output.last_hidden_state[:,0,:]),dim=-1)                 
