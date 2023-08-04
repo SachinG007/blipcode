@@ -339,7 +339,7 @@ def get_wds_dataset(train_data_path, batch_size, preprocess_img, is_train, epoch
     resampled = False
 
     # num_samples, num_shards = get_dataset_size(input_shards)
-    num_samples, num_shards = samples, 1599
+    num_samples, num_shards = train_samples, 1599
     print(f"Num train samples is : {num_samples}")
     shared_epoch = SharedEpoch(epoch=epoch)  # create a shared epoch store to sync epoch to dataloader worker proc
     
