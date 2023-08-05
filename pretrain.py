@@ -70,19 +70,20 @@ def train(model, data, optimizer, epoch, device, config, output_dir, scheduler):
 
     for i, (image, caption) in enumerate(data_loader):
         
-        if epoch==0:
-            warmup_lr_schedule(optimizer, i, 3000, 1e-6, 3e-4)
-            
         optimizer.zero_grad()
+        step = data_loader.num_batches*epoch+i
+        scheduler(step)
         
         image = image.to(device,non_blocking=True)
         
         # ramp up alpha in the first 2 epochs
-        alpha = config['alpha']*min(1,(epoch*data_loader.num_batches+i)/(2*data_loader.num_batches)) 
+        
+        alpha = config['alpha']*min(1,(step)/(2000)) 
 
         loss_ita, loss_itm, loss_lm = model(image, caption, alpha = alpha)  
+        lr_save = optimizer.param_groups[0]["lr"]
         if i%1000==0:
-            print(f"Step : {i}, Loss_ita : {loss_ita}, Loss_itm : {loss_itm} Loss_lm : {loss_lm}")
+            print(f"Step : {i}, Loss_ita : {loss_ita}, Loss_itm : {loss_itm} Loss_lm : {loss_lm}, LR : {lr_save}")
         if i%1000==0:
             print(f"Checkpoint Saved at Step : {i}")
             model_without_ddp = model.module
@@ -97,8 +98,8 @@ def train(model, data, optimizer, epoch, device, config, output_dir, scheduler):
 
         loss.backward()
         optimizer.step()
-        step = data_loader.num_batches*epoch+i
-        scheduler(step)
+        
+        
 
         metric_logger.update(loss_ita=loss_ita.item())
         metric_logger.update(loss_itm=loss_itm.item())
@@ -159,7 +160,8 @@ def main(args, config):
 
     optimizer = torch.optim.AdamW(params=model.parameters(), lr=0.0003, weight_decay=config['weight_decay'])
     warmup_steps = 10000
-    total_steps = data["train"].dataloader.num_batches
+    total_steps = data["train"].dataloader.num_batches * config['max_epoch']
+    print(f"Total steps : {total_steps}")
     scheduler = cosine_lr(optimizer, 0.0003, warmup_steps, total_steps)
     start_epoch = 0
     if args.checkpoint:    
