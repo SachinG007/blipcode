@@ -3,13 +3,13 @@ ann_root: 'annotation'
 coco_gt_root: 'annotation/coco_gt'
 
 # set pretrained as a file path or an url
-pretrained: '/home/sachingo/BLIP/output/blip_laion_16M_tmars/checkpoint.pth'
+pretrained: '/home/sachingo/BLIP/output_new/blip_laion_16M/checkpoint_00.pth'
 
 # size of vit model; base or large
 vit: 'base'
 vit_grad_ckpt: False
 vit_ckpt_layer: 0
-batch_size: 32
+batch_size: 48
 init_lr: 1e-5
 
 # vit: 'large'

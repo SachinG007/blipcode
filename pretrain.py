@@ -69,7 +69,9 @@ def train(model, data, optimizer, epoch, device, config, output_dir, scheduler):
     print(f"Num Batches : {data_loader.num_batches}")
 
     for i, (image, caption) in enumerate(data_loader):
-        
+        if i>6000:
+            print("done partial training")
+            break
         optimizer.zero_grad()
         step = data_loader.num_batches*epoch+i
         scheduler(step)
@@ -78,7 +80,7 @@ def train(model, data, optimizer, epoch, device, config, output_dir, scheduler):
         
         # ramp up alpha in the first 2 epochs
         
-        alpha = config['alpha']*min(1,(step)/(2000)) 
+        alpha = config['alpha']#*min(1,(step)/(2000)) 
 
         loss_ita, loss_itm, loss_lm = model(image, caption, alpha = alpha)  
         lr_save = optimizer.param_groups[0]["lr"]
@@ -93,10 +95,11 @@ def train(model, data, optimizer, epoch, device, config, output_dir, scheduler):
                 'config': config,
                 'epoch': epoch,
             }
-            torch.save(save_obj, os.path.join(output_dir, 'checkpoint.pth'))  
+            torch.save(save_obj, os.path.join(output_dir, f'checkpoint_{i}.pth'))  
         loss = loss_ita + loss_itm + loss_lm  
 
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
         
         
@@ -158,11 +161,12 @@ def main(args, config):
 
     model = model.to(device)   
 
-    optimizer = torch.optim.AdamW(params=model.parameters(), lr=0.0003, weight_decay=config['weight_decay'])
-    warmup_steps = 10000
-    total_steps = data["train"].dataloader.num_batches * config['max_epoch']
+    optimizer = torch.optim.AdamW(params=model.parameters(), lr=2.7e-5, weight_decay=config['weight_decay'])
+    warmup_steps = 500
+    # total_steps = data["train"].dataloader.num_batches * config['max_epoch']
+    total_steps = 6000
     print(f"Total steps : {total_steps}")
-    scheduler = cosine_lr(optimizer, 0.0003, warmup_steps, total_steps)
+    scheduler = cosine_lr(optimizer, 2.7e-5, warmup_steps, total_steps)
     start_epoch = 0
     if args.checkpoint:    
         checkpoint = torch.load(args.checkpoint, map_location='cpu') 
@@ -170,7 +174,8 @@ def main(args, config):
         model.load_state_dict(state_dict)    
         
         optimizer.load_state_dict(checkpoint['optimizer'])
-        start_epoch = checkpoint['epoch']+1                
+        # start_epoch = checkpoint['epoch']+1    
+        start_epoch = 0            
         print('resume checkpoint from %s'%args.checkpoint)    
     
     model_without_ddp = model

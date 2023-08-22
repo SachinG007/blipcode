@@ -330,6 +330,10 @@ def filter_bad_images(is_valid):
 
 def preprocess_ids(json):
     return int(json["key"])
+
+def preprocess_text(json):
+    mapper = np.load("/project_data/datasets/mapper.npy")
+    return mapper(json["key"])
     
 def get_wds_dataset(train_data_path, batch_size, preprocess_img, is_train, epoch=0, floor=False, tokenizer=None, valid_file=None, train_samples=0):
     if valid_file is not None:
@@ -381,8 +385,8 @@ def get_wds_dataset(train_data_path, batch_size, preprocess_img, is_train, epoch
     pipeline.extend([
         wds.select(filter_no_caption_or_no_image),
         wds.decode("pilrgb", handler=log_and_continue),
-        wds.rename(image="jpg;png", text="txt", ids = "json"),
-        wds.map_dict(image=preprocess_img, text=lambda text: text, ids = preprocess_ids),
+        wds.rename(image="jpg;png", text="json", ids = "json"),
+        wds.map_dict(image=preprocess_img, text= preprocess_text, ids = preprocess_ids),
         wds.select(filter_bad_images(valid_file)),
         wds.to_tuple("image", "text"),
         wds.batched(batch_size, partial=not is_train),

@@ -1,8 +1,8 @@
-image_root: '/export/share/datasets/vision/nocaps/'
+image_root: '/project_data/datasets/nocaps/'
 ann_root: 'annotation'
 
 # set pretrained as a file path or an url
-pretrained: 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_caption_capfilt_large.pth'
+pretrained: '/home/sachingo/BLIP/output_new/blip_laion_16M_tmars_clipgrad_stage2/checkpoint_3000.pth'
 
 vit: 'base'
 batch_size: 32
