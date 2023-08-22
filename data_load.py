@@ -21,6 +21,9 @@ from torch.utils.data.distributed import DistributedSampler
 from webdataset.filters import _shuffle
 from webdataset.tariterators import base_plus_ext, url_opener, tar_file_expander, valid_sample
 
+csv_file_path = "path.csv"
+df = pd.read_csv(csv_file_path)
+
 try:
     import horovod.torch as hvd
 except ImportError:
@@ -332,8 +335,9 @@ def preprocess_ids(json):
     return int(json["key"])
 
 def preprocess_text(json):
-    mapper = np.load("/project_data/datasets/mapper.npy")
-    return mapper(json["key"])
+    n = json["key"]
+    new_caption = df.loc[n,"caption"]
+    return new_caption
     
 def get_wds_dataset(train_data_path, batch_size, preprocess_img, is_train, epoch=0, floor=False, tokenizer=None, valid_file=None, train_samples=0):
     if valid_file is not None:
