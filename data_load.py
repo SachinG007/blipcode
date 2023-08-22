@@ -21,8 +21,8 @@ from torch.utils.data.distributed import DistributedSampler
 from webdataset.filters import _shuffle
 from webdataset.tariterators import base_plus_ext, url_opener, tar_file_expander, valid_sample
 
-csv_file_path = "path.csv"
-df = pd.read_csv(csv_file_path)
+#csv_file_path = "path.csv"
+#df = pd.read_csv(csv_file_path)
 
 try:
     import horovod.torch as hvd
@@ -389,8 +389,10 @@ def get_wds_dataset(train_data_path, batch_size, preprocess_img, is_train, epoch
     pipeline.extend([
         wds.select(filter_no_caption_or_no_image),
         wds.decode("pilrgb", handler=log_and_continue),
-        wds.rename(image="jpg;png", text="json", ids = "json"),
-        wds.map_dict(image=preprocess_img, text= preprocess_text, ids = preprocess_ids),
+        wds.rename(image="jpg;png;jpeg;webp", text="txt", ids = "json"),
+        # wds.rename(image="jpg;png", text="json", ids = "json"),
+        # wds.map_dict(image=preprocess_img, text= preprocess_text, ids = preprocess_ids),
+        wds.map_dict(image=preprocess_img, text= lambda x: x, ids = preprocess_ids),
         wds.select(filter_bad_images(valid_file)),
         wds.to_tuple("image", "text"),
         wds.batched(batch_size, partial=not is_train),
